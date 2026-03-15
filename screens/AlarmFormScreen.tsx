@@ -50,8 +50,7 @@ export default function AlarmFormScreen({ route, navigation }: AlarmFormScreenPr
   const [endMinutes, setEndMinutes] = useState(existing?.endMinutes ?? 18 * 60);
   const [intervalMinutes, setIntervalMinutes] = useState(existing?.intervalMinutes ?? 60);
   const [days, setDays] = useState<number[]>(existing?.days ?? ALL_DAYS);
-  const [showStart, setShowStart] = useState(false);
-  const [showEnd, setShowEnd] = useState(false);
+  const [activePicker, setActivePicker] = useState<'start' | 'end' | null>(null);
   const [saving, setSaving] = useState(false);
 
   const alertCount = countNotifications({ startMinutes, endMinutes, intervalMinutes, days });
@@ -130,53 +129,35 @@ export default function AlarmFormScreen({ route, navigation }: AlarmFormScreenPr
       <View style={styles.section}>
         <Text style={styles.sectionLabel}>TIME RANGE</Text>
         <View style={styles.timeRow}>
-          <Pressable style={styles.timePill} onPress={() => { setShowEnd(false); setShowStart(true); }}>
+          <Pressable style={styles.timePill} onPress={() => setActivePicker('start')}>
             <Text style={styles.timeLabel}>From</Text>
             <Text style={styles.timeValue}>{formatTime(startMinutes)}</Text>
           </Pressable>
           <Text style={styles.timeDash}>→</Text>
-          <Pressable style={styles.timePill} onPress={() => { setShowStart(false); setShowEnd(true); }}>
+          <Pressable style={styles.timePill} onPress={() => setActivePicker('end')}>
             <Text style={styles.timeLabel}>To</Text>
             <Text style={styles.timeValue}>{formatTime(endMinutes)}</Text>
           </Pressable>
         </View>
       </View>
 
-      {showStart && (
+      {activePicker !== null && (
         <View style={styles.pickerContainer}>
           {Platform.OS === 'ios' && (
-            <Pressable style={styles.pickerDoneBtn} onPress={() => setShowStart(false)}>
+            <Pressable style={styles.pickerDoneBtn} onPress={() => setActivePicker(null)}>
               <Text style={styles.pickerDoneText}>Done</Text>
             </Pressable>
           )}
           <DateTimePicker
-            value={minutesToDate(startMinutes)}
+            value={activePicker === 'start' ? minutesToDate(startMinutes) : minutesToDate(endMinutes)}
             mode="time"
             is24Hour={false}
             display={Platform.OS === 'ios' ? 'spinner' : 'default'}
             onChange={(_: DateTimePickerEvent, date?: Date) => {
-              setShowStart(Platform.OS === 'ios');
-              if (date) setStartMinutes(dateToMinutes(date));
-            }}
-          />
-        </View>
-      )}
-
-      {showEnd && (
-        <View style={styles.pickerContainer}>
-          {Platform.OS === 'ios' && (
-            <Pressable style={styles.pickerDoneBtn} onPress={() => setShowEnd(false)}>
-              <Text style={styles.pickerDoneText}>Done</Text>
-            </Pressable>
-          )}
-          <DateTimePicker
-            value={minutesToDate(endMinutes)}
-            mode="time"
-            is24Hour={false}
-            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-            onChange={(_: DateTimePickerEvent, date?: Date) => {
-              setShowEnd(Platform.OS === 'ios');
-              if (date) setEndMinutes(dateToMinutes(date));
+              if (Platform.OS !== 'ios') setActivePicker(null);
+              if (!date) return;
+              if (activePicker === 'start') setStartMinutes(dateToMinutes(date));
+              else setEndMinutes(dateToMinutes(date));
             }}
           />
         </View>
