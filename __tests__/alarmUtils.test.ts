@@ -1,0 +1,95 @@
+import {
+  formatTime,
+  getAlarmTimeslots,
+  dayToWeekday,
+  formatDays,
+  ALL_DAYS,
+  WORKDAYS,
+  WEEKENDS,
+} from '../utils/alarmUtils';
+
+describe('formatTime', () => {
+  it('formats midnight', () => {
+    expect(formatTime(0)).toBe('12:00 AM');
+  });
+
+  it('formats noon', () => {
+    expect(formatTime(720)).toBe('12:00 PM');
+  });
+
+  it('formats 9:00 AM', () => {
+    expect(formatTime(540)).toBe('9:00 AM');
+  });
+
+  it('formats 1:30 PM', () => {
+    expect(formatTime(810)).toBe('1:30 PM');
+  });
+
+  it('formats 11:59 PM', () => {
+    expect(formatTime(1439)).toBe('11:59 PM');
+  });
+
+  it('pads minutes with leading zero', () => {
+    expect(formatTime(601)).toBe('10:01 AM');
+  });
+});
+
+describe('getAlarmTimeslots', () => {
+  it('returns correct slots for 9:00–10:00 every 60 min', () => {
+    expect(getAlarmTimeslots({ startMinutes: 540, endMinutes: 600, intervalMinutes: 60 }))
+      .toEqual([540, 600]);
+  });
+
+  it('returns 10 slots for 9:00–18:00 every 60 min', () => {
+    const slots = getAlarmTimeslots({ startMinutes: 540, endMinutes: 1080, intervalMinutes: 60 });
+    expect(slots).toHaveLength(10);
+    expect(slots[0]).toBe(540);
+    expect(slots[9]).toBe(1080);
+  });
+
+  it('returns a single slot when start equals end', () => {
+    expect(getAlarmTimeslots({ startMinutes: 540, endMinutes: 540, intervalMinutes: 30 }))
+      .toEqual([540]);
+  });
+
+  it('returns correct slots for 30 min interval', () => {
+    const slots = getAlarmTimeslots({ startMinutes: 0, endMinutes: 60, intervalMinutes: 30 });
+    expect(slots).toEqual([0, 30, 60]);
+  });
+});
+
+describe('dayToWeekday', () => {
+  it('converts Sunday (0) to weekday 1', () => {
+    expect(dayToWeekday(0)).toBe(1);
+  });
+
+  it('converts Saturday (6) to weekday 7', () => {
+    expect(dayToWeekday(6)).toBe(7);
+  });
+
+  it('converts Monday (1) to weekday 2', () => {
+    expect(dayToWeekday(1)).toBe(2);
+  });
+});
+
+describe('formatDays', () => {
+  it('returns "Every day" for all 7 days', () => {
+    expect(formatDays(ALL_DAYS)).toBe('Every day');
+  });
+
+  it('returns "Workdays" for Mon–Fri', () => {
+    expect(formatDays(WORKDAYS)).toBe('Workdays');
+  });
+
+  it('returns "Weekends" for Sat–Sun', () => {
+    expect(formatDays(WEEKENDS)).toBe('Weekends');
+  });
+
+  it('returns abbreviated day labels for a custom selection', () => {
+    expect(formatDays([1, 3, 5])).toBe('Mo, We, Fr');
+  });
+
+  it('sorts days before formatting', () => {
+    expect(formatDays([5, 1, 3])).toBe('Mo, We, Fr');
+  });
+});
