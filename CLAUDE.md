@@ -65,7 +65,11 @@ npm run android    # Start with Android emulator
 npm run ios        # Start with iOS simulator
 ```
 
-No test runner or linter is configured.
+```bash
+npm test           # Run unit tests
+```
+
+**iOS testing limitation:** `expo-notifications` is not fully supported in Expo Go on iOS. A development build is required, which needs an Apple Developer account ($99/year) and macOS. Without these, notifications cannot be tested on a physical iPhone.
 
 ---
 

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import {
   Alert,
+  Keyboard,
   Platform,
   Pressable,
   ScrollView,
@@ -106,6 +107,8 @@ export default function AlarmFormScreen({ route, navigation }: AlarmFormScreenPr
           value={label}
           onChangeText={setLabel}
           maxLength={40}
+          returnKeyType="done"
+          onSubmitEditing={Keyboard.dismiss}
         />
       </View>
 
@@ -125,29 +128,43 @@ export default function AlarmFormScreen({ route, navigation }: AlarmFormScreenPr
       </View>
 
       {showStart && (
-        <DateTimePicker
-          value={minutesToDate(startMinutes)}
-          mode="time"
-          is24Hour={false}
-          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-          onChange={(_: DateTimePickerEvent, date?: Date) => {
-            setShowStart(Platform.OS === 'ios');
-            if (date) setStartMinutes(dateToMinutes(date));
-          }}
-        />
+        <View style={styles.pickerContainer}>
+          {Platform.OS === 'ios' && (
+            <Pressable style={styles.pickerDoneBtn} onPress={() => setShowStart(false)}>
+              <Text style={styles.pickerDoneText}>Done</Text>
+            </Pressable>
+          )}
+          <DateTimePicker
+            value={minutesToDate(startMinutes)}
+            mode="time"
+            is24Hour={false}
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+            onChange={(_: DateTimePickerEvent, date?: Date) => {
+              setShowStart(Platform.OS === 'ios');
+              if (date) setStartMinutes(dateToMinutes(date));
+            }}
+          />
+        </View>
       )}
 
       {showEnd && (
-        <DateTimePicker
-          value={minutesToDate(endMinutes)}
-          mode="time"
-          is24Hour={false}
-          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-          onChange={(_: DateTimePickerEvent, date?: Date) => {
-            setShowEnd(Platform.OS === 'ios');
-            if (date) setEndMinutes(dateToMinutes(date));
-          }}
-        />
+        <View style={styles.pickerContainer}>
+          {Platform.OS === 'ios' && (
+            <Pressable style={styles.pickerDoneBtn} onPress={() => setShowEnd(false)}>
+              <Text style={styles.pickerDoneText}>Done</Text>
+            </Pressable>
+          )}
+          <DateTimePicker
+            value={minutesToDate(endMinutes)}
+            mode="time"
+            is24Hour={false}
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+            onChange={(_: DateTimePickerEvent, date?: Date) => {
+              setShowEnd(Platform.OS === 'ios');
+              if (date) setEndMinutes(dateToMinutes(date));
+            }}
+          />
+        </View>
       )}
 
       <View style={styles.section}>
@@ -278,6 +295,18 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     elevation: 1,
   },
+  pickerContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  pickerDoneBtn: {
+    alignItems: 'flex-end',
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 4,
+  },
+  pickerDoneText: { fontSize: 16, fontWeight: '600', color: '#4A90E2' },
   timeLabel: { fontSize: 11, color: '#999', fontWeight: '600', marginBottom: 4 },
   timeValue: { fontSize: 22, fontWeight: '700', color: '#4A90E2' },
   timeDash: { fontSize: 18, color: '#bbb' },
