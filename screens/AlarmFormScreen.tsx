@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import {
   Alert,
+  InputAccessoryView,
   Keyboard,
   Platform,
   Pressable,
@@ -10,6 +11,8 @@ import {
   TextInput,
   View,
 } from 'react-native';
+
+const LABEL_INPUT_ID = 'label-input';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { loadAlarms, saveAlarms } from '../utils/storage';
 import { scheduleAlarmNotifications, formatTime } from '../utils/notifications';
@@ -111,18 +114,28 @@ export default function AlarmFormScreen({ route, navigation }: AlarmFormScreenPr
           maxLength={40}
           returnKeyType="done"
           onSubmitEditing={Keyboard.dismiss}
+          inputAccessoryViewID={Platform.OS === 'ios' ? LABEL_INPUT_ID : undefined}
         />
+        {Platform.OS === 'ios' && (
+          <InputAccessoryView nativeID={LABEL_INPUT_ID}>
+            <View style={styles.keyboardToolbar}>
+              <Pressable onPress={Keyboard.dismiss}>
+                <Text style={styles.keyboardToolbarDone}>Done</Text>
+              </Pressable>
+            </View>
+          </InputAccessoryView>
+        )}
       </View>
 
       <View style={styles.section}>
         <Text style={styles.sectionLabel}>TIME RANGE</Text>
         <View style={styles.timeRow}>
-          <Pressable style={styles.timePill} onPress={() => setShowStart(true)}>
+          <Pressable style={styles.timePill} onPress={() => { setShowEnd(false); setShowStart(true); }}>
             <Text style={styles.timeLabel}>From</Text>
             <Text style={styles.timeValue}>{formatTime(startMinutes)}</Text>
           </Pressable>
           <Text style={styles.timeDash}>→</Text>
-          <Pressable style={styles.timePill} onPress={() => setShowEnd(true)}>
+          <Pressable style={styles.timePill} onPress={() => { setShowStart(false); setShowEnd(true); }}>
             <Text style={styles.timeLabel}>To</Text>
             <Text style={styles.timeValue}>{formatTime(endMinutes)}</Text>
           </Pressable>
@@ -302,6 +315,15 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     elevation: 1,
   },
+  keyboardToolbar: {
+    backgroundColor: '#F2F2F7',
+    borderTopWidth: 1,
+    borderTopColor: '#E0E0E0',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    alignItems: 'flex-end',
+  },
+  keyboardToolbarDone: { fontSize: 17, fontWeight: '600', color: '#4A90E2' },
   pickerContainer: {
     backgroundColor: '#fff',
     borderRadius: 12,
