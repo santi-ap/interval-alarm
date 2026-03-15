@@ -47,15 +47,23 @@ Only mention these when **genuinely helpful**, not on every response.
 
 ---
 
+## Bug Fix Workflow
+
+Same as the feature workflow: pull latest `master`, create a branch (e.g. `fix/description`) from it, push it, open a PR. GitHub Actions will run tests — auto-merges on pass, comments on failure.
+
+---
+
 ## Feature Development Workflow
 
-1. Create a new branch for the feature and push it to remote
+1. Pull the latest `master` (`git pull origin master`), then create a new branch from it and push to remote
 2. Implement the feature with unit tests
 3. Open a PR against `master` — do not merge locally
 4. GitHub Actions will run the tests automatically:
    - If tests **pass** → PR is merged to `master` automatically
    - If tests **fail** → a comment is posted on the PR tagging @santi-ap with a link to the logs; fix the issues, push to the branch, and the checks will re-run
 5. Keep the feature branch after merging (do not delete it)
+
+> Always branch from the latest `master`. Never create branches from other feature or fix branches.
 
 > There is no need to run unit tests locally before opening a PR.
 
