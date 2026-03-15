@@ -51,9 +51,13 @@ Only mention these when **genuinely helpful**, not on every response.
 
 1. Create a new branch for the feature and push it to remote
 2. Implement the feature with unit tests
-3. Run the tests — if they pass, merge to `master` and push `master` to remote
-4. If tests fail, fix the issues and repeat from step 3
+3. Open a PR against `master` — do not merge locally
+4. GitHub Actions will run the tests automatically:
+   - If tests **pass** → PR is merged to `master` automatically
+   - If tests **fail** → a comment is posted on the PR tagging @santi-ap with a link to the logs; fix the issues, push to the branch, and the checks will re-run
 5. Keep the feature branch after merging (do not delete it)
+
+> There is no need to run unit tests locally before opening a PR.
 
 ---
 

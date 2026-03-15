@@ -4,6 +4,10 @@ on:
   pull_request:
     branches: [master]
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -21,6 +25,12 @@ jobs:
 
       - name: Run tests
         run: npm test
+
+      - name: Auto-merge on success
+        if: success()
+        run: gh pr merge "${{ github.event.pull_request.number }}" --merge --auto
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Comment on failure
         if: failure()
