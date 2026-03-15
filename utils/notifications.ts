@@ -1,7 +1,7 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import type { Alarm } from '../types';
-import { ALL_DAYS, dayToWeekday, formatTime, getAlarmTimeslots } from './alarmUtils';
+import { ALL_DAYS, IOS_NOTIFICATION_LIMIT, dayToWeekday, formatTime, getAlarmTimeslots } from './alarmUtils';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -39,14 +39,18 @@ export async function scheduleAlarmNotifications(alarm: Alarm): Promise<string[]
 
   const { label } = alarm;
   const days = alarm.days ?? ALL_DAYS;
+  const allDays = days.length === ALL_DAYS.length;
   const slots = getAlarmTimeslots(alarm);
   const notificationIds: string[] = [];
+  let scheduled = 0;
 
   for (const slot of slots) {
     const hour = Math.floor(slot / 60);
     const minute = slot % 60;
 
-    for (const day of days) {
+    if (allDays) {
+      // Daily repeat — one notification per slot, no weekday needed
+      if (scheduled >= IOS_NOTIFICATION_LIMIT) break;
       const id = await Notifications.scheduleNotificationAsync({
         content: {
           title: label || 'Interval Alarm',
@@ -55,15 +59,36 @@ export async function scheduleAlarmNotifications(alarm: Alarm): Promise<string[]
         },
         trigger: {
           type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
-          weekday: dayToWeekday(day),
           hour,
           minute,
           repeats: true,
           ...(Platform.OS === 'android' && { channelId: 'interval-alarms' }),
         },
       });
-
       notificationIds.push(id);
+      scheduled++;
+    } else {
+      for (const day of days) {
+        if (scheduled >= IOS_NOTIFICATION_LIMIT) break;
+        const id = await Notifications.scheduleNotificationAsync({
+          content: {
+            title: label || 'Interval Alarm',
+            body: formatTime(slot),
+            sound: 'default',
+          },
+          trigger: {
+            type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
+            weekday: dayToWeekday(day),
+            hour,
+            minute,
+            repeats: true,
+            ...(Platform.OS === 'android' && { channelId: 'interval-alarms' }),
+          },
+        });
+        notificationIds.push(id);
+        scheduled++;
+      }
+      if (scheduled >= IOS_NOTIFICATION_LIMIT) break;
     }
   }
 
