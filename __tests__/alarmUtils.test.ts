@@ -3,9 +3,11 @@ import {
   getAlarmTimeslots,
   dayToWeekday,
   formatDays,
+  countNotifications,
   ALL_DAYS,
   WORKDAYS,
   WEEKENDS,
+  IOS_NOTIFICATION_LIMIT,
 } from '../utils/alarmUtils';
 
 describe('formatTime', () => {
@@ -69,6 +71,29 @@ describe('dayToWeekday', () => {
 
   it('converts Monday (1) to weekday 2', () => {
     expect(dayToWeekday(1)).toBe(2);
+  });
+});
+
+describe('countNotifications', () => {
+  it('counts slots only when all 7 days selected (daily trigger)', () => {
+    // 9:00–18:00 every 60 min = 10 slots, all days → 10 notifications (not 70)
+    expect(countNotifications({ startMinutes: 540, endMinutes: 1080, intervalMinutes: 60, days: ALL_DAYS })).toBe(10);
+  });
+
+  it('counts slots × days when specific days selected', () => {
+    // 9:00–10:00 every 60 min = 2 slots, 3 days → 6 notifications
+    expect(countNotifications({ startMinutes: 540, endMinutes: 600, intervalMinutes: 60, days: [1, 2, 3] })).toBe(6);
+  });
+
+  it('exceeds iOS limit for 5-min interval over a full day', () => {
+    // 9:00–18:00 every 5 min = 109 slots, all days → 109 > 64
+    const count = countNotifications({ startMinutes: 540, endMinutes: 1080, intervalMinutes: 5, days: ALL_DAYS });
+    expect(count).toBeGreaterThan(IOS_NOTIFICATION_LIMIT);
+  });
+
+  it('stays within iOS limit for 60-min interval all day', () => {
+    const count = countNotifications({ startMinutes: 540, endMinutes: 1080, intervalMinutes: 60, days: ALL_DAYS });
+    expect(count).toBeLessThanOrEqual(IOS_NOTIFICATION_LIMIT);
   });
 });
 

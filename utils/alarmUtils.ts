@@ -1,5 +1,8 @@
 import type { Alarm } from '../types';
 
+/** iOS hard cap on pending scheduled notifications. */
+export const IOS_NOTIFICATION_LIMIT = 64;
+
 export const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6];
 export const WORKDAYS = [1, 2, 3, 4, 5];
 export const WEEKENDS = [0, 6];
@@ -31,6 +34,17 @@ export function getAlarmTimeslots(alarm: Pick<Alarm, 'startMinutes' | 'endMinute
 /** Our day index (0=Sun … 6=Sat) → expo-notifications weekday (1=Sun … 7=Sat) */
 export function dayToWeekday(day: number): number {
   return day + 1;
+}
+
+/**
+ * Total notifications that would be scheduled for this alarm.
+ * When all 7 days are selected we use a daily trigger (no weekday),
+ * so the count equals the number of time slots. Otherwise it's slots × days.
+ */
+export function countNotifications(alarm: Pick<Alarm, 'startMinutes' | 'endMinutes' | 'intervalMinutes' | 'days'>): number {
+  const slots = getAlarmTimeslots(alarm).length;
+  const days = alarm.days ?? ALL_DAYS;
+  return days.length === ALL_DAYS.length ? slots : slots * days.length;
 }
 
 /** Human-readable summary of selected days, e.g. "Workdays", "Mo, We, Fr" */

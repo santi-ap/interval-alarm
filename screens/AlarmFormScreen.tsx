@@ -17,7 +17,8 @@ import {
   WORKDAYS,
   WEEKENDS,
   DAY_LABELS,
-  getAlarmTimeslots,
+  IOS_NOTIFICATION_LIMIT,
+  countNotifications,
 } from '../utils/alarmUtils';
 import type { Alarm, AlarmFormScreenProps } from '../types';
 
@@ -49,7 +50,8 @@ export default function AlarmFormScreen({ route, navigation }: AlarmFormScreenPr
   const [showEnd, setShowEnd] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const alertCount = getAlarmTimeslots({ startMinutes, endMinutes, intervalMinutes }).length;
+  const alertCount = countNotifications({ startMinutes, endMinutes, intervalMinutes, days });
+  const overLimit = alertCount > IOS_NOTIFICATION_LIMIT;
 
   function toggleDay(day: number) {
     setDays((prev) =>
@@ -223,14 +225,19 @@ export default function AlarmFormScreen({ route, navigation }: AlarmFormScreenPr
         </View>
       </View>
 
-      <View style={styles.previewBox}>
-        <Text style={styles.previewTitle}>
+      <View style={[styles.previewBox, overLimit && styles.previewBoxWarning]}>
+        <Text style={[styles.previewTitle, overLimit && styles.previewTitleWarning]}>
           {alertCount} alert{alertCount !== 1 ? 's' : ''} per day
         </Text>
         <Text style={styles.previewSub}>
           {formatTime(startMinutes)} · every {intervalMinutes} min · until{' '}
           {formatTime(endMinutes)}
         </Text>
+        {overLimit && (
+          <Text style={styles.previewWarning}>
+            ⚠️ Exceeds iOS limit of {IOS_NOTIFICATION_LIMIT}. Only the first {IOS_NOTIFICATION_LIMIT} alerts will fire. Use a longer interval or shorter range.
+          </Text>
+        )}
       </View>
 
       <Pressable
@@ -345,8 +352,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
   },
+  previewBoxWarning: { backgroundColor: '#FFF4E5' },
   previewTitle: { fontSize: 18, fontWeight: '700', color: '#4A90E2' },
+  previewTitleWarning: { color: '#E07800' },
   previewSub: { fontSize: 13, color: '#666' },
+  previewWarning: { fontSize: 12, color: '#E07800', textAlign: 'center', marginTop: 4 },
   saveBtn: {
     backgroundColor: '#4A90E2',
     borderRadius: 14,
