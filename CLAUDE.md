@@ -49,10 +49,11 @@ Only mention these when **genuinely helpful**, not on every response.
 
 ## Feature Development Workflow
 
-1. Create a new branch for the feature
+1. Create a new branch for the feature and push it to remote
 2. Implement the feature with unit tests
-3. Run the tests — if they pass, merge to `master`
+3. Run the tests — if they pass, merge to `master` and push `master` to remote
 4. If tests fail, fix the issues and repeat from step 3
+5. Keep the feature branch after merging (do not delete it)
 
 ---
 
