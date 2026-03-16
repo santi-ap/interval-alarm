@@ -1,5 +1,6 @@
 {
   "expo": {
+    "owner": "santi_ap",
     "name": "interval-alarm",
     "slug": "interval-alarm",
     "version": "1.0.0",
@@ -35,6 +36,17 @@
           "sounds": []
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "a4a9474e-fb21-4695-a69c-1189a60c7912"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/a4a9474e-fb21-4695-a69c-1189a60c7912"
+    }
   }
 }
