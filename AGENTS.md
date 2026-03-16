@@ -44,6 +44,12 @@ interface Alarm {
     - **Git:** Responsible for branching, commits, and PR creation **only after tests pass**.
     - **Conflict Resolution:** Handles simple Git conflicts. Complex or logic-heavy conflicts (e.g., architectural overlaps) should be delegated back to the authoring agent (usually Claude).
 
+### Task File Requirement
+Every feature, bug fix, revert, or similar work **MUST** begin by creating a task file in `tasks/` before any code is written.
+- File name: `tasks/<type>-<description>.md` (e.g., `tasks/feat-alarm-snooze.md`, `tasks/bug-fix-crash.md`)
+- Format: nested checkboxes, emoji prefix on the title (e.g., `# ✨ Feature:`, `# 🐛 Bug Fix:`, `# 🔄 Revert:`)
+- Use `[-]` when starting a step, `[x]` when fully complete
+
 ### Bug Fix Workflow
 1. Pull latest `master`.
 2. Create a branch (`fix/description`).
