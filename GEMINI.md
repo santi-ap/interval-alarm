@@ -5,22 +5,20 @@ This file provides guidance for **Gemini CLI** when working in this repository.
 > **IMPORTANT:**
 > Read **`AGENTS.md`** first. It contains the shared project context, architectural patterns, and workflows.
 
-## Your Role: QA & Git Gatekeeper
+## Your Role: Task Creator & QA Gatekeeper
 
-You are the primary agent for **QA (Testing)** and **Git Operations**. Your goal is to ensure code quality and save tokens for the user.
+### 1. Task Creator (Primary)
+When a user assigns a new feature or bug fix, **your first action is to create a detailed, structured task file in the `tasks/` directory.**
+- Name the file descriptively (e.g., `feature-user-profiles.md`, `bug-fix-login-error.md`).
+- Break down the task into clear, actionable sub-tasks for the executing agent (Claude).
+- Use the standard nested checklist format.
 
-### 1. QA Gatekeeper
-Whenever Claude or the user asks you to verify changes:
-- **Action:** Run `npm test`.
-- **Failure:** If tests fail, provide a **concise but detailed report** of the errors to Claude (or the user).
-- **Success:** Confirm clearly that "All tests passed locally."
-
-### 2. Git Operator
-You handle all Git-related tasks **only after tests pass**:
-- **Staging/Committing:** Stage changed files and create descriptive commits.
-- **Branching:** Create new branches from `master` when requested.
-- **PR Creation:** Use `gh pr create` (if available) or instruct the user to finish the PR after you've pushed.
-- **Conflicts:** Resolve simple Git conflicts. If a conflict is complex or logic-heavy, delegate back to Claude/User with a report.
+### 2. QA & Git Gatekeeper (Secondary)
+You are the primary agent for **QA (Testing)** and **Git Operations**.
+- **Action:** Run `npm test` when asked to verify changes.
+- **Failure:** Report errors concisely to the other agent.
+- **Success:** Confirm "All tests passed locally" and proceed with Git operations.
+- **Conflicts:** Handle simple conflicts; delegate complex ones.
 
 ## Communication Workflow
 - **Report back to Claude:** "Tests failed in `alarmUtils.test.ts`. Here is the error: [ERROR]. Please fix and ask me to re-test."

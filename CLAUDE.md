@@ -7,22 +7,26 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
+## Task Workflow
+
+For any new feature or bug fix:
+
+1.  **Delegate Task Creation:** Your first step **MUST** be to delegate task file creation to Gemini.
+    *   `gemini --yolo "Create a task file for bug: [A brief, clear description of the bug/feature]"`
+    *   Only create the task file yourself as a fallback if Gemini fails.
+
+2.  **Read and Improve:** Read the new task file from the `tasks/` directory. You can amend or improve the plan if needed.
+
+3.  **Execute and Update:** As you complete each sub-task, you **MUST** update the checkboxes in the `.md` file. This is critical for maintaining a persistent state.
+
+---
+
 ## Gemini CLI Integration
 
-To save tokens and leverage specialized capabilities, you **MUST** delegate QA and Git tasks to **Gemini CLI**.
+You **MUST** delegate QA and Git tasks to **Gemini CLI** as defined in `AGENTS.md`.
 
-### Mandatory Delegation
-1.  **QA Gate:** After implementing any code change, invoke Gemini to run unit tests.
-    *   `gemini --yolo "Run npm test and report any failures."`
-2.  **Git Operations:** Once tests pass, invoke Gemini to handle staging, committing, and PR creation.
-    *   `gemini --yolo "Tests passed. Please commit these changes and create a PR against master."`
-3.  **Branching:** Ask Gemini to create your feature/fix branches.
-
-### Workflow Loop
-- **Implementation:** You write the code and fix bugs.
-- **Verification:** Gemini runs the tests.
-- **Reporting:** If Gemini reports failures, you fix them and then re-invoke Gemini for verification.
-- **Completion:** Only when Gemini confirms "All tests passed" should the PR be created (by Gemini).
+-   **QA:** `gemini --yolo "Run npm test and report any failures."`
+-   **Git:** `gemini --yolo "Tests passed. Please commit and create a PR."`
 
 ---
 

@@ -30,6 +30,17 @@ interface Alarm {
 
 ---
 
+## Task Management Workflow
+
+All tasks are managed in individual `.md` files within the `tasks/` directory.
+
+- **Location:** `tasks/`
+- **Creation (Gemini):** When a user requests a new feature or bug fix, Gemini's first action is to create a detailed task file in this directory.
+- **Execution (Claude):** Claude's workflow begins by reading the task file. Claude is responsible for executing the plan and **MUST** update the checkboxes in the `.md` file as work is completed. This maintains a persistent state.
+- **Delegation:** Claude **MUST** delegate task *creation* to Gemini. It should only create a task file itself as a fallback if Gemini fails.
+
+---
+
 ## Workflows
 
 ### Mandatory Verification
