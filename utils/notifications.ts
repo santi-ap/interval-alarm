@@ -1,7 +1,7 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import type { Alarm } from '../types';
-import { ALL_DAYS, IOS_NOTIFICATION_LIMIT, dayToWeekday, formatTime, getAlarmTimeslots } from './alarmUtils';
+import { ALL_DAYS, IOS_NOTIFICATION_LIMIT, dayToWeekday, formatTime, getAlarmTimeslots, getSameDayUpcomingSlots } from './alarmUtils';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -43,6 +43,36 @@ export async function scheduleAlarmNotifications(alarm: Alarm): Promise<string[]
   const slots = getAlarmTimeslots(alarm);
   const notificationIds: string[] = [];
   let scheduled = 0;
+
+  // For weekday-specific alarms, CALENDAR weekday triggers may skip the current day.
+  // Schedule one-time DATE triggers for any slots still upcoming today.
+  if (!allDays) {
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    const todayDayIndex = now.getDay();
+    const sameDaySlots = getSameDayUpcomingSlots(alarm, currentMinutes, todayDayIndex);
+    for (const slot of sameDaySlots) {
+      if (scheduled >= IOS_NOTIFICATION_LIMIT) break;
+      const hour = Math.floor(slot / 60);
+      const minute = slot % 60;
+      const triggerDate = new Date();
+      triggerDate.setHours(hour, minute, 0, 0);
+      const id = await Notifications.scheduleNotificationAsync({
+        content: {
+          title: label || 'Interval Alarm',
+          body: formatTime(slot),
+          sound: 'default',
+        },
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.DATE,
+          date: triggerDate,
+          ...(Platform.OS === 'android' && { channelId: 'interval-alarms' }),
+        },
+      });
+      notificationIds.push(id);
+      scheduled++;
+    }
+  }
 
   for (const slot of slots) {
     const hour = Math.floor(slot / 60);
