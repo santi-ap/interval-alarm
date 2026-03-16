@@ -14,7 +14,9 @@ export interface Alarm {
 export type RootStackParamList = {
   Home: undefined;
   AlarmForm: { alarm: Alarm | null };
+  AlarmRinging: { label: string };
 };
 
 export type HomeScreenProps = NativeStackScreenProps<RootStackParamList, 'Home'>;
 export type AlarmFormScreenProps = NativeStackScreenProps<RootStackParamList, 'AlarmForm'>;
+export type AlarmRingingScreenProps = NativeStackScreenProps<RootStackParamList, 'AlarmRinging'>;
