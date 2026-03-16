@@ -28,6 +28,7 @@
     },
     "plugins": [
       "@react-native-community/datetimepicker",
+      "expo-av",
       [
         "expo-notifications",
         {
