@@ -47,6 +47,21 @@ export function countNotifications(alarm: Pick<Alarm, 'startMinutes' | 'endMinut
   return days.length === ALL_DAYS.length ? slots : slots * days.length;
 }
 
+/**
+ * Returns timeslots (minutes since midnight) that are upcoming later today.
+ * Returns an empty array if today is not a selected day.
+ */
+export function getSameDayUpcomingSlots(
+  alarm: Pick<Alarm, 'startMinutes' | 'endMinutes' | 'intervalMinutes' | 'days'>,
+  currentMinutes: number,
+  todayDayIndex: number, // 0=Sun … 6=Sat
+): number[] {
+  const days = alarm.days ?? ALL_DAYS;
+  const todayIsSelected = days.length === ALL_DAYS.length || days.includes(todayDayIndex);
+  if (!todayIsSelected) return [];
+  return getAlarmTimeslots(alarm).filter((slot) => slot > currentMinutes);
+}
+
 /** Human-readable summary of selected days, e.g. "Workdays", "Mo, We, Fr" */
 export function formatDays(days: number[]): string {
   if (days.length === 7) return 'Every day';

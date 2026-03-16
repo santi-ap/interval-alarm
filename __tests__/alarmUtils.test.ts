@@ -4,6 +4,7 @@ import {
   dayToWeekday,
   formatDays,
   countNotifications,
+  getSameDayUpcomingSlots,
   ALL_DAYS,
   WORKDAYS,
   WEEKENDS,
@@ -94,6 +95,40 @@ describe('countNotifications', () => {
   it('stays within iOS limit for 60-min interval all day', () => {
     const count = countNotifications({ startMinutes: 540, endMinutes: 1080, intervalMinutes: 60, days: ALL_DAYS });
     expect(count).toBeLessThanOrEqual(IOS_NOTIFICATION_LIMIT);
+  });
+});
+
+describe('getSameDayUpcomingSlots', () => {
+  const alarm = { startMinutes: 540, endMinutes: 660, intervalMinutes: 60, days: [1, 3, 5] }; // Mon/Wed/Fri, 9–11 AM
+
+  it('returns upcoming slots when today is a selected day', () => {
+    // 9:30 AM on Monday → 9:00 passed, 10:00 and 11:00 upcoming
+    expect(getSameDayUpcomingSlots(alarm, 570, 1)).toEqual([600, 660]);
+  });
+
+  it('returns all slots when none have passed yet', () => {
+    // 8:00 AM on Monday → all slots upcoming
+    expect(getSameDayUpcomingSlots(alarm, 480, 1)).toEqual([540, 600, 660]);
+  });
+
+  it('returns empty when all slots have passed', () => {
+    // 12:00 PM on Monday → all slots passed
+    expect(getSameDayUpcomingSlots(alarm, 720, 1)).toEqual([]);
+  });
+
+  it('returns empty when today is not a selected day', () => {
+    // Sunday (0) is not in [1, 3, 5]
+    expect(getSameDayUpcomingSlots(alarm, 480, 0)).toEqual([]);
+  });
+
+  it('returns upcoming slots for an all-days alarm', () => {
+    const allDaysAlarm = { startMinutes: 540, endMinutes: 660, intervalMinutes: 60, days: ALL_DAYS };
+    expect(getSameDayUpcomingSlots(allDaysAlarm, 570, 2)).toEqual([600, 660]);
+  });
+
+  it('returns empty for all-days alarm when all slots have passed', () => {
+    const allDaysAlarm = { startMinutes: 540, endMinutes: 660, intervalMinutes: 60, days: ALL_DAYS };
+    expect(getSameDayUpcomingSlots(allDaysAlarm, 720, 2)).toEqual([]);
   });
 });
 
