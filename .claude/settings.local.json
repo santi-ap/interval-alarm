@@ -8,7 +8,8 @@
       "Bash(npx expo:*)",
       "Bash(npm test:*)",
       "Bash(git push:*)",
-      "Bash(gh pr:*)"
+      "Bash(gh pr:*)",
+      "Bash(bash scripts/update-task-status.sh tasks/feat-github-kanban.md)"
     ]
   },
   "hooks": {
