@@ -50,6 +50,26 @@ Every feature, bug fix, revert, or similar work **MUST** begin by creating a tas
 - Format: nested checkboxes, emoji prefix on the title (e.g., `# ✨ Feature:`, `# 🐛 Bug Fix:`, `# 🔄 Revert:`)
 - Use `[-]` when starting a step, `[x]` when fully complete
 
+### Mandatory Task Status Updates ⚠️
+**All agents (Claude Code and Gemini) MUST update task file checkboxes in real-time as work progresses.**
+
+#### Rules
+1. **Before starting any step** → change `[ ]` to `[-]` in the task file immediately
+2. **After completing any step** → change `[-]` to `[x]` in the task file immediately
+3. **Never batch updates** — update the file as each step begins/ends, not at the end of the session
+
+#### GitHub Projects sync (automatic)
+- **Claude Code**: The PostToolUse hook in `.claude/settings.local.json` auto-syncs to GitHub Projects after every `Edit`/`Write` to a `tasks/*.md` file. No manual action needed.
+- **Gemini**: The `git pre-commit` hook auto-syncs any staged `tasks/*.md` files before each commit. No manual action needed.
+- **Manual sync** (if needed): `bash scripts/update-task-status.sh tasks/<file>.md`
+
+#### Status mapping (local → GitHub Projects)
+| Checkboxes | GitHub Projects column |
+|---|---|
+| Has at least one `[-]` | **In Progress** |
+| All `[x]`, none open | **Done** |
+| All `[ ]` | **Todo** |
+
 ### Bug Fix Workflow
 1. Pull latest `master`.
 2. Create a branch (`fix/description`).
