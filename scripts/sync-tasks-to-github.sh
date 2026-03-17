@@ -26,14 +26,14 @@ echo "==> Using project number: $PROJECT_NUMBER"
 PROJECT_ID=$(gh project list --owner "$OWNER" --format json \
   | jq -r --argjson num "$PROJECT_NUMBER" '.projects[] | select(.number == $num) | .id')
 
-# Fetch Status field ID and option IDs
+# Fetch Status field + option IDs
 FIELDS=$(gh project field-list "$PROJECT_NUMBER" --owner "$OWNER" --format json)
 STATUS_FIELD_ID=$(echo "$FIELDS" | jq -r '.fields[] | select(.name == "Status") | .id')
 TODO_OPTION_ID=$(echo "$FIELDS" | jq -r '.fields[] | select(.name == "Status") | .options[] | select(.name == "Todo") | .id')
 DONE_OPTION_ID=$(echo "$FIELDS" | jq -r '.fields[] | select(.name == "Status") | .options[] | select(.name == "Done") | .id')
 
 if [[ -z "$STATUS_FIELD_ID" ]]; then
-  echo "ERROR: Status field not found in project. Run ./scripts/setup-github-project.sh first."
+  echo "ERROR: Status field not found. Run ./scripts/setup-github-project.sh first."
   exit 1
 fi
 
@@ -57,15 +57,6 @@ determine_status() {
   fi
 }
 
-# Existing issues cache (title → number)
-declare -A EXISTING_ISSUES
-while IFS=$'\t' read -r number title; do
-  EXISTING_ISSUES["$title"]="$number"
-done < <(gh issue list --state all --limit 200 --json number,title \
-  | jq -r '.[] | [(.number | tostring), .title] | @tsv')
-
-echo "==> Found ${#EXISTING_ISSUES[@]} existing issues."
-
 for task_file in "$TASKS_DIR"/*.md; do
   [[ -f "$task_file" ]] || continue
 
@@ -79,45 +70,47 @@ for task_file in "$TASKS_DIR"/*.md; do
   STATUS=$(determine_status "$task_file")
   echo "    Status: $STATUS"
 
-  # Find or create the issue
-  if [[ -v "EXISTING_ISSUES[$TITLE]" ]]; then
-    ISSUE_NUMBER="${EXISTING_ISSUES[$TITLE]}"
-    echo "    Issue already exists: #$ISSUE_NUMBER"
+  # Find existing issue by exact title
+  ISSUE_NUMBER=$(gh issue list --state all --limit 200 --json number,title \
+    | jq -r --arg t "$TITLE" '.[] | select(.title == $t) | .number' \
+    | head -1)
+
+  if [[ -n "$ISSUE_NUMBER" ]]; then
+    echo "    Found existing issue: #$ISSUE_NUMBER"
   else
     echo "    Creating issue..."
-    ISSUE_NUMBER=$(gh issue create \
+    ISSUE_URL_NEW=$(gh issue create \
       --title "$TITLE" \
-      --body "Tracked from \`$task_file\`." \
-      --json number \
-      | jq -r '.number')
+      --body "Tracked from \`$task_file\`.")
+    ISSUE_NUMBER=$(echo "$ISSUE_URL_NEW" | grep -oE '[0-9]+$')
     echo "    Created issue #$ISSUE_NUMBER"
   fi
 
-  # Add to project (idempotent — gh returns existing item if already added)
-  echo "    Adding issue #$ISSUE_NUMBER to project..."
+  ISSUE_URL=$(gh issue view "$ISSUE_NUMBER" --json url | jq -r '.url')
+
+  echo "    Adding to project..."
   ITEM_ID=$(gh project item-add "$PROJECT_NUMBER" \
     --owner "$OWNER" \
-    --url "$(gh issue view "$ISSUE_NUMBER" --json url | jq -r '.url')" \
+    --url "$ISSUE_URL" \
     --format json \
     | jq -r '.id')
 
-  # Set status
   if [[ "$STATUS" == "done" ]]; then
     OPTION_ID="$DONE_OPTION_ID"
   else
     OPTION_ID="$TODO_OPTION_ID"
   fi
 
-  echo "    Setting status to '$STATUS' (option: $OPTION_ID)..."
+  echo "    Setting status → $STATUS..."
   gh project item-edit \
     --id "$ITEM_ID" \
     --field-id "$STATUS_FIELD_ID" \
     --single-select-option-id "$OPTION_ID" \
     --project-id "$PROJECT_ID"
 
-  echo "    ✅ Done: #$ISSUE_NUMBER → $STATUS"
+  echo "    ✅ #$ISSUE_NUMBER → $STATUS"
 done
 
 echo ""
 echo "✅ Sync complete!"
-echo "   View project: gh project view $PROJECT_NUMBER --owner $OWNER --web"
+echo "   View: gh project view $PROJECT_NUMBER --owner $OWNER --web"

@@ -1,4 +1,4 @@
-# Plan
+# 🐛 Bug Fix: Alarms do not go off on the same day they are created
 
 - [x] ## 🐞 BUG: Alarms do not go off on the same day they are created
     - [x] ### Investigate Scheduling Logic
@@ -13,5 +13,5 @@
     - [x] ### Write & Run Tests
         - [x] Add `getSameDayUpcomingSlots` tests to `__tests__/alarmUtils.test.ts` (6 new test cases).
         - [x] All 28 tests pass locally.
-    - [ ] ### Create PR
-        - [ ] Once tests pass, delegate Git operations to Gemini: `gemini --yolo "Tests passed. Please commit these changes and create a PR against master."`
+    - [x] ### Create PR
+        - [x] Once tests pass, delegate Git operations to Gemini: `gemini --yolo "Tests passed. Please commit these changes and create a PR against master."`

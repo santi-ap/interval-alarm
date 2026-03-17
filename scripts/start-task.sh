@@ -100,11 +100,10 @@ $CONTEXT
 *Tracked from \`$TASK_FILE\`.*
 EOF
 )
-  ISSUE_NUMBER=$(gh issue create \
+  ISSUE_URL_NEW=$(gh issue create \
     --title "$TITLE" \
-    --body "$PR_BODY" \
-    --json number \
-    | jq -r '.number')
+    --body "$PR_BODY")
+  ISSUE_NUMBER=$(echo "$ISSUE_URL_NEW" | grep -oE '[0-9]+$')
   echo "    Created issue #$ISSUE_NUMBER"
 fi
 
