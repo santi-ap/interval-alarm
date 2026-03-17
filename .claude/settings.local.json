@@ -1,7 +1,29 @@
 {
   "permissions": {
     "allow": [
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(gemini:*)",
+      "Bash(find:*)",
+      "Bash(git checkout:*)",
+      "Bash(npx expo:*)",
+      "Bash(npm test:*)",
+      "Bash(git push:*)",
+      "Bash(gh pr:*)",
+      "Bash(bash scripts/update-task-status.sh tasks/feat-github-kanban.md)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/post-edit-task-sync.sh",
+            "async": true
+          }
+        ]
+      }
     ]
   }
 }
