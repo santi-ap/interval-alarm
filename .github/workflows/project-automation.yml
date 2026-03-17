@@ -1,0 +1,111 @@
+name: Project Automation
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [master]
+
+permissions:
+  issues: read
+  pull-requests: read
+  # Note: 'project' scope cannot be granted here via GITHUB_TOKEN.
+  # This workflow requires a PAT (PROJECT_TOKEN) with 'project' scope
+  # stored as a repository secret.
+
+jobs:
+  move-to-done:
+    # Only run when the PR is actually merged (not just closed/rejected)
+    if: github.event.pull_request.merged == true
+
+    runs-on: ubuntu-latest
+
+    env:
+      GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+      OWNER: santi-ap
+      PROJECT_NUMBER_FILE: .github/project-number
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract issue numbers from PR body
+        id: issues
+        run: |
+          PR_BODY="${{ github.event.pull_request.body }}"
+          # Match "Closes #N", "Fixes #N", "Resolves #N" (case-insensitive)
+          ISSUE_NUMBERS=$(echo "$PR_BODY" \
+            | grep -oiE '(closes|fixes|resolves)\s+#[0-9]+' \
+            | grep -oE '[0-9]+' \
+            | tr '\n' ' ' \
+            | xargs)
+          echo "Found issue numbers: $ISSUE_NUMBERS"
+          echo "issue_numbers=$ISSUE_NUMBERS" >> "$GITHUB_OUTPUT"
+
+      - name: Read project number
+        id: project
+        run: |
+          if [[ ! -f "$PROJECT_NUMBER_FILE" ]]; then
+            echo "ERROR: $PROJECT_NUMBER_FILE not found."
+            exit 1
+          fi
+          PROJECT_NUMBER=$(cat "$PROJECT_NUMBER_FILE")
+          echo "project_number=$PROJECT_NUMBER" >> "$GITHUB_OUTPUT"
+
+      - name: Fetch project metadata
+        id: metadata
+        run: |
+          PROJECT_NUMBER="${{ steps.project.outputs.project_number }}"
+
+          PROJECT_ID=$(gh project list --owner "$OWNER" --format json \
+            | jq -r --argjson num "$PROJECT_NUMBER" \
+                '.projects[] | select(.number == $num) | .id')
+
+          FIELDS=$(gh project field-list "$PROJECT_NUMBER" --owner "$OWNER" --format json)
+
+          STATUS_FIELD_ID=$(echo "$FIELDS" \
+            | jq -r '.fields[] | select(.name == "Status") | .id')
+
+          DONE_OPTION_ID=$(echo "$FIELDS" \
+            | jq -r '.fields[] | select(.name == "Status") | .options[] | select(.name == "Done") | .id')
+
+          echo "project_id=$PROJECT_ID"            >> "$GITHUB_OUTPUT"
+          echo "status_field_id=$STATUS_FIELD_ID"  >> "$GITHUB_OUTPUT"
+          echo "done_option_id=$DONE_OPTION_ID"    >> "$GITHUB_OUTPUT"
+
+      - name: Move linked issues to Done
+        if: steps.issues.outputs.issue_numbers != ''
+        run: |
+          PROJECT_NUMBER="${{ steps.project.outputs.project_number }}"
+          PROJECT_ID="${{ steps.metadata.outputs.project_id }}"
+          STATUS_FIELD_ID="${{ steps.metadata.outputs.status_field_id }}"
+          DONE_OPTION_ID="${{ steps.metadata.outputs.done_option_id }}"
+
+          for ISSUE_NUMBER in ${{ steps.issues.outputs.issue_numbers }}; do
+            echo "==> Processing issue #$ISSUE_NUMBER..."
+
+            ISSUE_URL=$(gh issue view "$ISSUE_NUMBER" --json url | jq -r '.url')
+
+            ITEM_ID=$(gh project item-list "$PROJECT_NUMBER" \
+              --owner "$OWNER" \
+              --format json \
+              | jq -r --arg url "$ISSUE_URL" \
+                  '.items[] | select(.content.url == $url) | .id')
+
+            if [[ -z "$ITEM_ID" ]]; then
+              echo "    Issue #$ISSUE_NUMBER not found in project. Adding it first..."
+              ITEM_ID=$(gh project item-add "$PROJECT_NUMBER" \
+                --owner "$OWNER" \
+                --url "$ISSUE_URL" \
+                --format json \
+                | jq -r '.id')
+            fi
+
+            echo "    Moving item $ITEM_ID to Done..."
+            gh project item-edit \
+              --id "$ITEM_ID" \
+              --field-id "$STATUS_FIELD_ID" \
+              --single-select-option-id "$DONE_OPTION_ID" \
+              --project-id "$PROJECT_ID"
+
+            echo "    ✅ Issue #$ISSUE_NUMBER moved to Done"
+          done
