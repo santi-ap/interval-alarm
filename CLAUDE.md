@@ -17,12 +17,32 @@ To save tokens and leverage specialized capabilities, you **MUST** delegate QA a
 2.  **Git Operations:** Once tests pass, invoke Gemini to handle staging, committing, and PR creation.
     *   `gemini --yolo "Tests passed. Please commit these changes and create a PR against master."`
 3.  **Branching:** Ask Gemini to create your feature/fix branches.
+4.  **Task file updates:** Delegate checkbox updates (`[ ]` → `[-]` / `[x]`) in `tasks/*.md` to Gemini.
+    *   Tell Gemini which steps started/completed; it edits the file. Example:
+    *   `gemini --yolo "Mark step 'Implement the Fix' as [-] (in progress) in tasks/feat-foo.md"`
+    *   `gemini --yolo "Mark step 'Implement the Fix' as [x] (done) in tasks/feat-foo.md"`
+    *   The pre-commit hook will auto-sync the updated status to GitHub Projects.
 
 ### Workflow Loop
 - **Implementation:** You write the code and fix bugs.
 - **Verification:** Gemini runs the tests.
 - **Reporting:** If Gemini reports failures, you fix them and then re-invoke Gemini for verification.
 - **Completion:** Only when Gemini confirms "All tests passed" should the PR be created (by Gemini).
+
+---
+
+## Learning System
+
+### Post-Conversation Logging
+After every conversation, review what happened. If you made mistakes, found workarounds, or discovered project-specific patterns, append to `.claude/steering/learning.md`.
+
+- Format entries under `## YYYY-MM-DD` date headers. If today's header exists, append below it; if not, add the header first.
+- Each entry: `err/pat/trick | title — lesson` (max ~120 chars). No date prefix on lines. No blank lines between entries.
+- Be extremely selective — only log non-obvious, reusable lessons.
+
+### Slash Commands
+- `/tidy-learnings` — deduplicate and trim `.claude/steering/learning.md` in-place
+- `/compress-memory` — compress old learning entries into `.claude/steering/long_term_memory.md`
 
 ---
 

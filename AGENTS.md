@@ -39,9 +39,10 @@ interface Alarm {
 
 ### Agent Roles & Responsibilities
 - **Claude Code:** Primary code architect and implementer. Focuses on logic and feature implementation.
-- **Gemini CLI:** Primary **QA and Git Operator**.
+- **Gemini CLI:** Primary **QA, Git, and Task Operator**.
     - **QA:** Responsible for running `npm test` after code changes.
     - **Git:** Responsible for branching, commits, and PR creation **only after tests pass**.
+    - **Task file updates:** Responsible for updating `[ ]` → `[-]` / `[x]` checkboxes in `tasks/*.md` as work progresses. Claude delegates this explicitly.
     - **Conflict Resolution:** Handles simple Git conflicts. Complex or logic-heavy conflicts (e.g., architectural overlaps) should be delegated back to the authoring agent (usually Claude).
 
 ### Task File Requirement
